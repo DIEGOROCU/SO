@@ -1,0 +1,10 @@
+Estudiar el código y el funcionamiento del programa show-passwd.c, que lee el contenido del fichero del sistema /etc/passwd e imprime por pantalla (o en otro fichero dado) las distintas entradas de/etc/passwd –una por línea–, así como los distintos campos de cada entrada. El fichero /etc/passwd almacena en formato de texto plano información esencial de los usuarios del sistema, como su identificador numérico de usuario o grupo así como el programa configurado como intérprete de órdenes (shell) predeterminado para cada usuario. Para obtener más información sobre este fichero se ha de consultar su página de manual: man 5 passwd
+
+Responda a las siguientes preguntas:
+1. Para representar cada una de las entradas del fichero /etc/passwd se emplea el tipo de datos passwd_entry_t. La función parse_passwd(), definida en show-passwd.c es la encargada de inicializar los distintos campos de la estructura. ¿Cuál es el propósito de la función clone_string() que se usa para inicializar algunos de los citados campos tipo cadena? ¿Por qué no es posible en algunos casos simplemente copiar la cadena vía strcpy() o realizando una asignación campo=cadena_existente;? Justifique la respuesta.
+2. La función strsep(), utilizada en parse_passwd(), modifica la cadena que se desea dividir en tokens. ¿Qué tipo de modificaciones sufre la cadena (variable line) tras invocaciones sucesivas de strsep()? Pista: Consúltese el valor y las direcciones de las variables del programa usando el depurador.
+
+Realice las siguientes modificaciones en el programa show-passwd.c:
+• Consulte la página de manual de la función strdup de la biblioteca estándar de C. Intenta utilizar esta función como reemplazo de clone_string().
+• Añada la opción -i <inputfile> para especificar una ruta alternativa para el fichero passwd. Hacer una copia de /etc/passwd en otra ubicación para verificar el correcto funcionamiento de esta nueva opción.
+• Implemente una nueva opción -c en el programa, que permita mostrar los campos en cada entrada de passwd como valores separados por comas (CSV) en lugar de por ":".
