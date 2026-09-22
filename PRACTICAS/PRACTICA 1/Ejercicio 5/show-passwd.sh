@@ -4,7 +4,11 @@
 # y muestra la información de aquellos usuarios cuyo directorio home
 # sea un subdirectorio directo de /home.
 
-FILE=${1:-/etc/passwd}
+if [ "$1" != "" ]; then
+    FILE="$1"
+else
+    FILE="/etc/passwd"
+fi
 
 while IFS=':' read -r login_name password uid gid user_name user_home user_shell
 do

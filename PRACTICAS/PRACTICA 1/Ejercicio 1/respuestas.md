@@ -4,12 +4,39 @@ Como no se disponía del archivo `ficheros_p1.tar.gz`, se responden las pregunta
 
 ## 1. Compilación
 
+Para llevar a cabo las pruebas de este apartado, los comandos a utilizar en la terminal son:
+```bash
+# Compilar el código de forma estándar y generar un ejecutable llamado "hello"
+gcc hello.c -o hello
+
+# Ejecutar el programa resultante
+./hello
+
+# Ejecutar sólo la etapa del pre-procesador y guardar el resultado en hello2.i
+gcc -E hello2.c -o hello2.i
+
+# Alternativa: compilar y guardar a la vez todos los ficheros intermedios (.i, .s, .o)
+gcc --save-temps hello2.c
+```
+
 *   **¿Qué ha ocurrido con la “llamada a min()” en hello2.i?**
     Al tratarse probablemente de una macro definida con `#define` (por ejemplo, `#define min(a,b) ((a)<(b)?(a):(b))`), la etapa de preprocesado sustituye directamente la "llamada" por el código correspondiente. No hay ninguna función `min`, sino que el código de la macro se expande "en línea" en el archivo de salida `.i`.
 *   **¿Qué efecto ha tenido la directiva `#include <stdio.h>`?**
     El preprocesador de C lee el contenido del archivo de cabecera `stdio.h` (y los que este incluya) y lo copia íntegramente en el archivo `.i`, de modo que el compilador tenga todas las declaraciones de funciones como `printf` disponibles.
 
 ## 2. Herramienta make
+
+Comandos utilizados en este apartado:
+```bash
+# Construye el proyecto leyendo el archivo Makefile
+make
+
+# Cambia la fecha de última modificación del fichero aux.c al instante actual
+touch aux.c
+
+# Ejecuta el objetivo "clean" definido en el Makefile para borrar archivos generados (.o, binarios)
+make clean
+```
 
 *   **Marca el fichero aux.c como modificado ejecutando `touch aux.c`. Después ejecuta de nuevo `make`. ¿Qué diferencia hay? ¿Por qué?**
     Al ejecutar `make` por segunda vez, solo se recompila el fichero `aux.c` a su código objeto `aux.o` y se vuelve a enlazar (linkear) el ejecutable final. Los demás archivos `.c` no se recompilan. Esto ocurre porque `make` comprueba la fecha de modificación de los archivos; como solo `aux.c` es más reciente que el ejecutable y que `aux.o`, solo realiza las tareas estrictamente necesarias.
@@ -19,6 +46,15 @@ Como no se disponía del archivo `ficheros_p1.tar.gz`, se responden las pregunta
     Al quitar `-lm` (que enlaza la librería matemática `libm`), se produce un error del tipo *"undefined reference to"* (por ejemplo, al usar `sqrt` o `sin`). La etapa que da problemas es la de **enlazado (link stage)**, ya que el compilador ha convertido bien el código a objeto, pero al juntarlo para hacer el ejecutable no encuentra dónde está la definición de esas funciones matemáticas.
 
 ## 3. Tamaño de variables
+
+*(Nota para este y los siguientes apartados: para compilar y probar de forma individual cualquiera de estos ficheros `.c`, como pide el enunciado general, el comando a utilizar en Linux/Mac/WSL es de la siguiente forma):*
+```bash
+# Compilar el programa (ejemplo con main1.c)
+gcc main1.c -o main1
+
+# Ejecutarlo para ver los resultados en consola
+./main1
+```
 
 *   **¿Por qué el primer printf() imprime valores distintos para 'a' con %d y %c?**
     Porque `%c` interpreta el byte como un carácter ASCII e imprime el símbolo (por ejemplo, la letra 'A'), mientras que `%d` interpreta ese mismo byte como un número entero y muestra su valor numérico en la tabla ASCII (por ejemplo, 65).

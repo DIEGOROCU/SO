@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
                 is_even = 1;
                 break;
             case 'l':
-                length = strtol(optarg, NULL, 10);
+                length = atoi(optarg);
                 break;
             default:
                 print_help();
@@ -47,7 +47,14 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Title: %s\n", title);
-    int current = is_even ? 2 : 1;
+    
+    int current;
+    if (is_even == 1) {
+        current = 2;
+    } else {
+        current = 1;
+    }
+
     for (int i = 0; i < length; i++) {
         printf("%d ", current);
         current += 2;

@@ -10,12 +10,12 @@
 /**
 * This function takes an array of integers and returns the sum of its n elements.
 */
-int sum(int *arr, int n);
+int sum(int arr[], int n);
 
 /**
 * This function fills an array with the first n prime numbers.
 */
-void compute_primes(int* result, int n);
+void compute_primes(int result[], int n);
 
 /**
 * This function returns 1 if the integer provided is a prime, 0 otherwise.
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-int sum(int *arr, int n) {
+int sum(int arr[], int n) {
     int i;
     // FIX 3: Initialize total to 0
     int total = 0;
@@ -51,7 +51,7 @@ int sum(int *arr, int n) {
     return total;
 }
 
-void compute_primes(int* result, int n) {
+void compute_primes(int result[], int n) {
     int i = 0;
     int x = 2;
     while(i < n) {

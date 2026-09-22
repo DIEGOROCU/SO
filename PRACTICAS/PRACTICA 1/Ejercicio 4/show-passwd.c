@@ -33,48 +33,99 @@ passwd_entry_t parse_passwd(char *line) {
     
     // Login name
     token = strsep(&line, ":");
-    entry.login_name = token ? strdup(token) : NULL;
+    if (token != NULL) {
+        entry.login_name = strdup(token);
+    } else {
+        entry.login_name = NULL;
+    }
     
     // Password
     token = strsep(&line, ":");
-    entry.optional_encrypted_passwd = token ? strdup(token) : NULL;
+    if (token != NULL) {
+        entry.optional_encrypted_passwd = strdup(token);
+    } else {
+        entry.optional_encrypted_passwd = NULL;
+    }
     
     // UID
     token = strsep(&line, ":");
-    entry.uid = token ? atoi(token) : 0;
+    if (token != NULL) {
+        entry.uid = atoi(token);
+    } else {
+        entry.uid = 0;
+    }
     
     // GID
     token = strsep(&line, ":");
-    entry.gid = token ? atoi(token) : 0;
+    if (token != NULL) {
+        entry.gid = atoi(token);
+    } else {
+        entry.gid = 0;
+    }
     
     // User name
     token = strsep(&line, ":");
-    entry.user_name = token ? strdup(token) : NULL;
+    if (token != NULL) {
+        entry.user_name = strdup(token);
+    } else {
+        entry.user_name = NULL;
+    }
     
     // Home
     token = strsep(&line, ":");
-    entry.user_home = token ? strdup(token) : NULL;
+    if (token != NULL) {
+        entry.user_home = strdup(token);
+    } else {
+        entry.user_home = NULL;
+    }
     
     // Shell
     token = strsep(&line, ":");
-    if (token && token[strlen(token)-1] == '\n') {
-        token[strlen(token)-1] = '\0'; // Remove newline
+    if (token != NULL) {
+        if (token[strlen(token)-1] == '\n') {
+            token[strlen(token)-1] = '\0'; // Remove newline
+        }
+        entry.user_shell = strdup(token);
+    } else {
+        entry.user_shell = NULL;
     }
-    entry.user_shell = token ? strdup(token) : NULL;
     
     return entry;
 }
 
 void print_passwd_entry(passwd_entry_t *entry, int csv) {
-    if (csv) {
-        printf("%s,%s,%d,%d,%s,%s,%s\n",
-               entry->login_name ? entry->login_name : "",
-               entry->optional_encrypted_passwd ? entry->optional_encrypted_passwd : "",
-               entry->uid,
-               entry->gid,
-               entry->user_name ? entry->user_name : "",
-               entry->user_home ? entry->user_home : "",
-               entry->user_shell ? entry->user_shell : "");
+    if (csv == 1) {
+        if (entry->login_name != NULL) {
+            printf("%s,", entry->login_name);
+        } else {
+            printf(",");
+        }
+        
+        if (entry->optional_encrypted_passwd != NULL) {
+            printf("%s,", entry->optional_encrypted_passwd);
+        } else {
+            printf(",");
+        }
+        
+        printf("%d,%d,", entry->uid, entry->gid);
+        
+        if (entry->user_name != NULL) {
+            printf("%s,", entry->user_name);
+        } else {
+            printf(",");
+        }
+        
+        if (entry->user_home != NULL) {
+            printf("%s,", entry->user_home);
+        } else {
+            printf(",");
+        }
+        
+        if (entry->user_shell != NULL) {
+            printf("%s\n", entry->user_shell);
+        } else {
+            printf("\n");
+        }
     } else {
         printf("Login: %s\n", entry->login_name);
         printf("Password: %s\n", entry->optional_encrypted_passwd);
