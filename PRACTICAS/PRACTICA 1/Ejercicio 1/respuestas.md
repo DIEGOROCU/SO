@@ -1,110 +1,136 @@
 # Respuestas a los ejercicios teóricos - Ejercicio 1
 
-Como no se disponía del archivo `ficheros_p1.tar.gz`, se responden las preguntas basándose en los problemas y errores clásicos de C a los que hacen referencia. Se incluyen pequeños ejemplos de código cuando es necesario para ilustrarlo.
-
 ## 1. Compilación
-
 Para llevar a cabo las pruebas de este apartado, los comandos a utilizar en la terminal son:
 ```bash
-# Compilar el código de forma estándar y generar un ejecutable llamado "hello"
 gcc hello.c -o hello
-
-# Ejecutar el programa resultante
 ./hello
-
-# Ejecutar sólo la etapa del pre-procesador y guardar el resultado en hello2.i
 gcc -E hello2.c -o hello2.i
-
-# Alternativa: compilar y guardar a la vez todos los ficheros intermedios (.i, .s, .o)
 gcc --save-temps hello2.c
 ```
-
-*   **¿Qué ha ocurrido con la “llamada a min()” en hello2.i?**
-    Al tratarse probablemente de una macro definida con `#define` (por ejemplo, `#define min(a,b) ((a)<(b)?(a):(b))`), la etapa de preprocesado sustituye directamente la "llamada" por el código correspondiente. No hay ninguna función `min`, sino que el código de la macro se expande "en línea" en el archivo de salida `.i`.
-*   **¿Qué efecto ha tenido la directiva `#include <stdio.h>`?**
-    El preprocesador de C lee el contenido del archivo de cabecera `stdio.h` (y los que este incluya) y lo copia íntegramente en el archivo `.i`, de modo que el compilador tenga todas las declaraciones de funciones como `printf` disponibles.
+* **¿Qué ha ocurrido con la “llamada a min()” en hello2.i?**
+Al tratarse de una macro definida con `#define`, el preprocesador la ha sustituido por el código en línea `((a)<(b)?(a):(b))` antes de compilar.
+* **¿Qué efecto ha tenido la directiva #include <stdio.h>?**
+Ha copiado todo el contenido de la cabecera `stdio.h` directamente en el archivo `hello2.i`.
 
 ## 2. Herramienta make
-
-Comandos utilizados en este apartado:
+Comandos utilizados:
 ```bash
-# Construye el proyecto leyendo el archivo Makefile
 make
-
-# Cambia la fecha de última modificación del fichero aux.c al instante actual
 touch aux.c
-
-# Ejecuta el objetivo "clean" definido en el Makefile para borrar archivos generados (.o, binarios)
 make clean
 ```
-
-*   **Marca el fichero aux.c como modificado ejecutando `touch aux.c`. Después ejecuta de nuevo `make`. ¿Qué diferencia hay? ¿Por qué?**
-    Al ejecutar `make` por segunda vez, solo se recompila el fichero `aux.c` a su código objeto `aux.o` y se vuelve a enlazar (linkear) el ejecutable final. Los demás archivos `.c` no se recompilan. Esto ocurre porque `make` comprueba la fecha de modificación de los archivos; como solo `aux.c` es más reciente que el ejecutable y que `aux.o`, solo realiza las tareas estrictamente necesarias.
-*   **¿Qué ha sucedido con `make clean`? Observa que está marcado como `phony`. ¿Por qué?**
-    El objetivo `clean` suele eliminar los archivos `.o` y ejecutables generados. Está marcado como `.PHONY` para indicarle a `make` que no representa un archivo real en el disco. Si no fuese `.PHONY` y creásemos un archivo llamado `clean` en ese directorio, al hacer `make clean` nos diría "`make: 'clean' is up to date`" y no ejecutaría los comandos de limpieza, ya que el archivo `clean` existe y no tiene dependencias que hayan cambiado.
-*   **Comenta la línea `LIBS = -lm` y compila. ¿Qué sucede? ¿Qué etapa da problemas?**
-    Al quitar `-lm` (que enlaza la librería matemática `libm`), se produce un error del tipo *"undefined reference to"* (por ejemplo, al usar `sqrt` o `sin`). La etapa que da problemas es la de **enlazado (link stage)**, ya que el compilador ha convertido bien el código a objeto, pero al juntarlo para hacer el ejecutable no encuentra dónde está la definición de esas funciones matemáticas.
+* **Marca el fichero aux.c como modificado ejecutando touch aux.c. Después ejecuta de nuevo make. ¿Qué diferencia hay? ¿Por qué?**
+Sólo se recompila `aux.c` (generando un nuevo `aux.o`) y se enlaza el ejecutable final, en lugar de recompilar todos los archivos `.c`. Esto es porque `make` mira las fechas de modificación y sólo trabaja sobre lo que ha cambiado o depende de ello.
+* **¿Qué ha sucedido con make clean? Observa que está marcado como phony...**
+Borra los ficheros compilados `.o` y ejecutables. Se marca como `.PHONY` para que `make` sepa que "clean" es el nombre de una tarea y no de un archivo. Si creas un archivo llamado `clean` y quitas el `.PHONY`, al ejecutar `make clean` dirá que está actualizado y no borrará nada.
+* **Comenta la línea LIBS = -lm y compila. ¿Qué sucede? ¿Qué etapa da problemas?**
+Falla la etapa de **enlazado (link)** con un "undefined reference", porque al quitar `-lm` el compilador no sabe dónde encontrar el código de las funciones matemáticas que hemos usado.
 
 ## 3. Tamaño de variables
+*(Nota para los siguientes apartados: los ficheros `.c` se compilan individualmente con comandos como `gcc main1.c -o main1` y se ejecutan con `./main1`)*
 
-*(Nota para este y los siguientes apartados: para compilar y probar de forma individual cualquiera de estos ficheros `.c`, como pide el enunciado general, el comando a utilizar en Linux/Mac/WSL es de la siguiente forma):*
-```bash
-# Compilar el programa (ejemplo con main1.c)
-gcc main1.c -o main1
-
-# Ejecutarlo para ver los resultados en consola
-./main1
-```
-
-*   **¿Por qué el primer printf() imprime valores distintos para 'a' con %d y %c?**
-    Porque `%c` interpreta el byte como un carácter ASCII e imprime el símbolo (por ejemplo, la letra 'A'), mientras que `%d` interpreta ese mismo byte como un número entero y muestra su valor numérico en la tabla ASCII (por ejemplo, 65).
-*   **¿Cuánto ocupa un tipo de datos char?**
-    Ocupa siempre **1 byte** (8 bits).
-*   **¿Por qué el valor de 'a' cambia tanto al incrementarlo en 6?**
-    Porque un `char` solo puede almacenar valores desde -128 hasta 127 (o 0 a 255 si es `unsigned`). Si se supera ese límite máximo, se produce un "desbordamiento" (overflow) y el valor numérico da la vuelta pasando a números negativos, lo que también cambia por completo el carácter ASCII representado.
-*   **Si un "long" y un "double" ocupan lo mismo, ¿por qué hay 2 tipos de datos diferentes?**
-    Porque su formato interno en la memoria es completamente distinto. `long` se usa para almacenar números enteros (usando complemento a 2), mientras que `double` se usa para almacenar números en coma flotante (fraccionarios/decimales) según el estándar IEEE 754, que divide los bits en signo, exponente y mantisa.
+* **main1.c: ¿Por qué el primer printf() imprime valores distintos para 'a' con %d y %c?**
+`%c` imprime el símbolo ASCII, y `%d` imprime el valor numérico en la tabla ASCII.
+* **¿Cuánto ocupa un tipo de datos char?**
+1 byte.
+* **¿Por qué el valor de 'a' cambia tanto al incrementarlo en 6?**
+Porque un `char` con signo tiene como máximo el valor 127. Como era 122 ('z') y le sumamos 6, se pasa a 128 y ocurre un desbordamiento (*overflow*), dando la vuelta al rango numérico y tomando un valor negativo (-128).
+* **Si un "long" y un "double" ocupan lo mismo, ¿por qué hay 2 tipos de datos diferentes?**
+Porque `long` almacena enteros usando representación de complemento a dos, mientras que `double` almacena números con decimales (coma flotante) bajo un estándar distinto (IEEE 754).
+* **main2.c: ¿Tenemos un problema de compilación o de ejecución?**
+De **compilación**.
+* **¿Por qué se da el problema? Soluciónalo.**
+El compilador arroja un error como `variably modified ‘array2’ at file scope` (o `array bound is not an integer constant`). Al declarar un array de forma global (`int array2[a];`), su tamaño debe ser una constante evaluable en tiempo de compilación. Aquí `a` es una variable. Se soluciona poniendo `#define A 7` y usando `int array2[A];`, o creando el array dentro del `main`.
+* **¿Qué significa el modificar "%lu" en printf()?**
+Significa *long unsigned*. Es el formato para imprimir un valor numérico grande sin signo, como el devuelto por `sizeof()`.
+* **¿A qué dirección apunta "pc"? ¿Coincide con la de alguna declarada? ¿Coinciden los tamaños?**
+Apunta a la dirección de `x` (`pc = &x;`). Coinciden en apuntar a la misma dirección base, pero no en su tamaño: `sizeof(x)` será 1 (por ser char) y `sizeof(pc)` será 8 (por ser un puntero en 64 bits).
+* **¿Coincide el valor del tamaño de array1 con el número de elementos? ¿Por qué?**
+No necesariamente. `sizeof(array1)` devuelve los bytes que ocupa el array completo. Como cada elemento es un `int` (normalmente 4 bytes), si hay 10 elementos el tamaño devuelto es 40, no 10.
+* **¿Coinciden las direcciones a las que apuntan str1 y str2?**
+No, se alojan en zonas de memoria diferentes (uno es un puntero a un string literal en la zona de solo lectura, y el otro es un array copiado en memoria estática o pila).
+* **¿Por qué los tamaños de str1 y str2 son diferentes?**
+`str1` es un puntero (`char*`), por lo que su `sizeof` es 8 bytes. `str2` es un array, por lo que su `sizeof` es la cantidad total de letras más el nulo final (21 bytes).
 
 ## 4. Arrays
 
-*   **array1.c: ¿Por qué no es necesario escribir "&list" para obtener la dirección del array list?**
-    En C, el nombre de un array por sí solo decae a (o se comporta como) un puntero a su primer elemento. Es decir, `list` es equivalente a `&list[0]`.
-*   **¿Qué hay almacenado en la dirección de list?**
-    Está almacenado el primer elemento del array.
-*   **¿Por qué es necesario pasar el tamaño del array en `init_array`?**
-    Porque al pasar un array a una función en C, lo que se pasa es un puntero a su primer elemento. La función pierde la información del tamaño original del array, por lo que necesita saber cuántos elementos debe inicializar/recorrer.
-*   **¿Por qué el tamaño devuelto por `sizeof()` en `init_array` no coincide con el declarado en `main`?**
-    En `main`, `list` es un array, por lo que `sizeof(list)` devuelve el número de elementos multiplicado por el tamaño de cada elemento. En `init_array`, lo que llega es un *puntero*, por lo que `sizeof()` devuelve el tamaño del puntero (normalmente 8 bytes en arquitecturas de 64 bits), independientemente de lo grande que sea el array.
-*   **array2.c: ¿La copia del array se realiza correctamente? ¿Por qué?**
-    No, hacer `array2 = array1` en C no copia los elementos. Lo que se intenta es copiar el puntero o da un error de compilación (ya que un nombre de array no es un "l-value" modificable). Para copiar un array correctamente se debe usar un bucle que copie cada elemento uno a uno, o funciones como `memcpy` de `<string.h>` (`memcpy(array2, array1, n * sizeof(tipo));`).
+* **array1.c: ¿Por qué no es necesario escribir "&list" para obtener su dirección?**
+Porque el nombre de un array por sí solo evalúa como la dirección de memoria de su primer elemento.
+* **¿Qué hay almacenado en la dirección de list?**
+El primer elemento del array, es decir `list[0]`.
+* **¿Por qué es necesario pasar como argumento el tamaño en init_array?**
+Porque al pasar un array como parámetro a una función, este decae a un puntero perdiéndose la información sobre cuántos elementos tiene, así que el bucle necesita un límite.
+* **¿Por qué el tamaño devuelto por sizeof() en init_array no coincide con main()?**
+En `main`, `list` es un array (`sizeof` = 20 bytes). En `init_array`, recibe un *puntero*, por lo que `sizeof` devuelve 8 bytes (tamaño del puntero).
+* **¿Por qué NO es necesario pasar el tamaño en init_array2?**
+Porque internamente la función usa la constante preprocesada `N` que se definió con `#define N 5` de forma global, en vez de un parámetro.
+* **¿Coincide el tamaño devuelto por sizeof() en init_array2 con main()?**
+No. Aunque declaremos `int array[N]`, como parámetro de función sigue decayendo a un puntero simple (`int *`), por lo que su `sizeof` es 8 y no 20.
+* **array2.c: ¿La copia del array se realiza correctamente? ¿Por qué?**
+No. En C, hacer `dst = src` sobre variables locales copia los punteros, no el contenido (y de hecho, ese cambio de puntero sólo afecta localmente dentro de la función). Se debe usar un bucle `for` o `memcpy`.
 
 ## 5. Punteros
 
-*   **¿Qué operador usamos para declarar un puntero?** El asterisco: `*` (ej: `int *ptr;`).
-*   **¿Qué operador usamos para obtener la dirección de una variable?** El ampersand: `&` (ej: `ptr = &var;`).
-*   **¿Qué operador se utiliza para acceder al contenido de la dirección a la que apunta un puntero?** El asterisco, conocido como operador de indirección o desreferencia: `*` (ej: `*ptr = 10;`).
-*   **punteros2.c: ¿Cuántos bytes se reservan con `malloc()`?** `malloc(n)` reserva `n` bytes consecutivos. Por ejemplo, `malloc(10 * sizeof(int))` reservaría normalmente 40 bytes.
-*   **¿Cuál es la dirección del primer y último byte?** Si `malloc` devuelve la dirección base `P`, el primer byte está en `P` y el último en `P + (tamaño_reservado - 1)`.
-*   **punteros3.c: Error típico con zonas reservadas y asignaciones.**
-    Si se hace `ptr = &c;` después de haber hecho `ptr = malloc(...)`, la variable `ptr` pasa a apuntar a la dirección de memoria de la variable `c`.
-    La zona de memoria original que se reservó con `malloc` se "pierde" porque ya no tenemos ningún puntero que la referencie. Esto causa una **fuga de memoria** (memory leak). Además, no se puede liberar esa zona porque no tenemos su dirección (al hacer `free(ptr)` ahora intentaríamos liberar una variable local `c`, provocando un error en ejecución (segmentation fault o abort)).
+* **punteros1.c: ¿Qué operador usamos para declarar un puntero?** Asterisco (`*`).
+* **¿Qué operador usamos para obtener la dirección?** Ampersand (`&`).
+* **¿Qué operador para acceder al contenido de una dirección (desreferenciar)?** Asterisco (`*`).
+* **Hay un error en el código. ¿Se produce en compilación o en ejecución? ¿Por qué se produce?**
+En **ejecución** (*Segmentation fault*). Se produce por la instrucción `ptr = (int*) 0x600a48; *ptr = 13;`, donde intentamos acceder o escribir a una dirección de memoria fija a la fuerza, la cual no está asignada al programa por el sistema operativo, resultando en un acceso inválido a memoria.
+* **punteros2.c: ¿Cuántos bytes se reservan con malloc()?** 
+Se reservan 127 elementos `int` (típicamente de 4 bytes) = 508 bytes.
+* **¿Cuál es la dirección del primer y último byte?** 
+La del primer byte es la que devuelve `malloc` (`ptr`). La del último byte es `ptr + 507 bytes` (o la dirección base + `127 * sizeof(int) - 1`).
+* **¿Por qué el contenido de ptr es 7 y no 5?**
+Se hizo `*ptr = 5`, pero justo después `ptr[0] = 7;`. Ambas notaciones acceden a la misma posición (el primer elemento), por lo que lo sobrescribe.
+* **¿Por qué se modifica ptr[1] tras *ptr2=15;?**
+Porque previamente se hizo `ptr2 = ptr; ptr2++;`. Eso hizo que el puntero `ptr2` avanzara al segundo elemento, por lo que desreferenciar `ptr2` equivale a modificar `ptr[1]`.
+* **Indica dos modos de escribir el valor 13 en ptr[100]:**
+1. Notación de array: `ptr[100] = 13;`
+2. Notación de punteros: `*(ptr + 100) = 13;`
+* **Hay un error en el código. ¿Cuál es?**
+Hay un problema en ejecución o bug lógico grave: se hace `free(ptr);` y en la línea siguiente `*ptr = 3;`. Es un caso clásico de *use-after-free*, accediendo a memoria que ya hemos devuelto al sistema operativo, lo que puede corromper datos o abortar el programa.
+* **punteros3.c: ¿Por qué cambia ptr[13] tras ptr = &c;?**
+Porque `ptr` ahora apunta a la dirección de memoria de la única variable `c`. Intentar leer la posición 13 a partir de ahí (`ptr[13]`) lee basura u otras partes de la memoria fuera del límite de `c` (*undefined behavior*).
+* **El código tiene un error. ¿Se manifiesta en compilación o ejecución?**
+En **ejecución**. El programa falla al ejecutar `free(ptr)`.
+* **¿Qué ocurre con la zona de malloc? ¿Se puede acceder o liberar?**
+La zona de memoria de `malloc` se "pierde" en el limbo porque sobreescribimos la única variable (`ptr`) que guardaba su dirección. A partir de ese momento, no se puede acceder a ella ni liberarla, causando una **fuga de memoria** (memory leak). Y la llamada final a `free(ptr)` da un error fatal al intentar liberar `&c`, que es una variable global no generada por `malloc`.
 
 ## 6. Funciones
 
-*   **arg1.c: ¿Por qué no se modifica el valor tras `sumC`?**
-    En C los argumentos se pasan siempre **por valor** (se realiza una copia local dentro de la función). Si se modifica dentro de la función, solo cambia la copia local y el original queda intacto.
-*   **¿Dónde se modifica la información?**
-    En el bloque de memoria de la pila (stack) correspondiente a las variables locales de esa llamada a la función.
-*   **arg2.c: ¿Por qué a veces se usa `.` y otras `->` en estructuras?**
-    Se usa el punto `.` cuando tenemos la estructura directamente (una variable normal de ese tipo de la estructura). Se usa la flecha `->` cuando tenemos un **puntero** a una estructura, siendo equivalente a `(*puntero).campo`.
-*   **¿Por qué el valor de `zc` pasa a ser incorrecto?**
-    Probablemente la función devuelva un puntero a una variable local de la función. Al salir de la función, la memoria de las variables locales se libera o queda inválida en la pila, así que usar ese puntero es comportamiento indefinido (undefined behavior) y da valores basura.
+* **arg1.c: ¿Por qué xc no se modifica tras sumC? ¿Dónde se modifica?**
+En C el paso de argumentos es "por valor". `xc` se copia para enviarlo a la función. Las modificaciones que hace `sumC` (`a.re = 12.5;`) ocurren en la memoria de la pila local de esa función sobre esa copia, dejando al `xc` original del `main` inalterado.
+* **Comenta las declaraciones adelantadas de sum y sumC. ¿Qué ocurre?**
+Ocurre un error o warning de compilación, porque el compilador lee de arriba abajo y al encontrar `sum` o `sumC` en el `main` asume tipos por defecto o no los reconoce.
+* **arg2.c: ¿Por qué cambia y tras sum()?**
+Porque a `sum` se le pasó la dirección de `y` (paso "por referencia" simulado mediante punteros: `&y`). Modificar el contenido de ese puntero afecta directamente a la variable original.
+* **¿Por qué a veces se usa `.` y otras `->`?**
+Se usa el punto `.` cuando es una variable directa de tipo `struct`. Se usa la flecha `->` cuando es un puntero hacia una variable de tipo `struct`.
+* **¿Por qué el valor de zc pasa a ser incorrecto?**
+Porque `sumC` devuelve la dirección de una variable **local** (`&r`). Al salir de la función, esa variable local se destruye/invalida y el puntero apunta a memoria basura.
+* **Corrige el código:**
+Para evitarlo, la memoria se debe alojar en el `main` y pasar por referencia o devolviendo la estructura entera por valor como en `arg1.c`, o utilizar `malloc` dentro de la función `sumC`.
 
 ## 7. Cadenas de caracteres (strings)
 
-*   **strings1.c: ¿En qué dirección está la letra 'B' de "Bonjour" y la 'j'?**
-    Si la 'B' está en la dirección base (por ejemplo, `0x1000`), al estar codificado en C con caracteres consecutivos de 1 byte, la 'o' estaría en `0x1001`, la 'n' en `0x1002` y la 'j' en `0x1003` (la dirección de la letra inicial + 3).
-*   **¿Por qué `strlen()` devuelve distinto a `sizeof()`?**
-    `sizeof()` devuelve el espacio de memoria reservado en bytes para toda la variable (o en caso de un string literal como array, el tamaño de la cadena más el carácter nulo). `strlen()` es una función de la librería que cuenta los caracteres **hasta encontrar el carácter nulo de terminación `\0`**. Si tienes `char s[50] = "Hola";`, `sizeof(s)` será 50, pero `strlen(s)` será 4.
-*   **strings2.c: ¿Qué hace la función `mod()`?**
-    En C clásico, el operador `%` es para el módulo de enteros, pero si se escribe una función `mod`, probablemente se usa para asegurarse de que el módulo en números negativos funciona como módulo matemático y no como resto (el `%` en C puede devolver negativos, ejemplo: `-1 % 5` da `-1`).
+* **strings1.c: El código contiene un error. ¿Compilación o ejecución?**
+En **ejecución** (Violación de segmento / Segmentation fault).
+* **¿Por qué se produce? Soluciónalo.**
+En `p[0] = 'H'`, se intenta modificar un string literal de solo lectura (`"Bonjour"`). Los strings definidos así se guardan en el segmento de texto o memoria de solo lectura del programa. Se soluciona comentando la línea `p[0] = 'H', p[1] = 'i', p[2] = '\0';`.
+* **¿En qué dirección está la letra 'B' y la 'j'?**
+La 'B' está en la dirección apuntada por `p` (ej: `0x1000`). La 'j' está 3 bytes más adelante (ej: `0x1003`).
+* **Tras p=msg2;, ¿cómo podemos recuperar la dirección de "Bonjour"?**
+Es imposible si no guardamos esa dirección previamente en otro puntero, ya que la hemos sobrescrito.
+* **¿Por qué la longitud de p y msg2 es 2?**
+Porque se insertó un byte nulo manualmente (`msg[0] = 'B', msg[1] = 'y'`... pero el problema pregunta sobre la línea 30 original si se hace el p='H','i','\0'). El tamaño real del puntero no importa, `strlen` evalúa la cadena y cuenta caracteres hasta el primer `\0`. Si tras las H y la i escribimos `\0`, `strlen` contará sólo las 2 primeras letras.
+* **¿Por qué strlen() devuelve diferente a sizeof()?**
+`sizeof` devuelve los bytes reservados en tiempo de compilación o el tamaño del puntero (por ej, 8). `strlen` devuelve el número de caracteres contando dinámicamente hasta el `\0`.
+* **strings2.c: El código de copy no funciona, ¿por qué?**
+Igual que con los arrays, pasar un puntero por valor y hacer `dst = org` solo cambia la copia local de la variable puntero, no el exterior.
+* **Usa copy2(). ¿Funciona la copia?**
+`copy2(&str2)` sí funcionaría para sobreescribir el puntero en el main y que ambos apunten a "original", porque usa un puntero doble para alterar el puntero original por referencia.
+* **Propón una correcta de copia:**
+Si lo que se quiere es copiar letra a letra a otro bloque de memoria en vez de copiar el puntero, se debería usar `strcpy(dst, org)`.
+* **¿Qué hace mod()? ¿Por qué funciona?**
+Resta 32 al código ASCII de cada letra. Casualmente, en la tabla ASCII la diferencia entre letras minúsculas (ej: 'a'=97) y mayúsculas ('A'=65) es exactamente 32, por lo que la función transforma el texto original (minúsculas) a mayúsculas. Funciona sobre `str3` siempre que tenga espacio asignado y copiemos correctamente.
