@@ -14,6 +14,6 @@ do
         printf '[Entry #%d]\n\tlogin=%s\n\tenc_pass=%s\n\tuid=%s\n\tgid=%s\n\tuser_name=%s\n\thome=%s\n\tshell=%s\n' \
             "$entry_number" "$login_name" "$encrypted_pass" "$uid" "$gid" \
             "$user_name" "$user_home" "$user_shell"
+        entry_number=$((entry_number + 1))
     fi
-    entry_number=$((entry_number + 1))
 done < "$FILE"
