@@ -1,27 +1,19 @@
 #!/bin/bash
 
-# Este script lee /etc/passwd (o el archivo pasado como primer argumento)
-# y muestra la información de aquellos usuarios cuyo directorio home
-# sea un subdirectorio directo de /home.
+FILE=${1:-/etc/passwd}
+entry_number=0
 
-if [ "$1" != "" ]; then
-    FILE="$1"
-else
-    FILE="/etc/passwd"
-fi
-
-while IFS=':' read -r login_name password uid gid user_name user_home user_shell
+while IFS=':' read -r login_name encrypted_pass uid gid user_name user_home user_shell
 do
-    # Usamos dirname para obtener el directorio padre del home
-    # y test ([ ]) para comprobar si es igual a /home
-    if [ "$(dirname "$user_home")" = "/home" ]; then
-        echo "Login: $login_name"
-        echo "Password: $password"
-        echo "UID: $uid"
-        echo "GID: $gid"
-        echo "Name: $user_name"
-        echo "Home: $user_home"
-        echo "Shell: $user_shell"
-        echo "----------------------"
+    # El programa de referencia descarta las lineas de comentario.
+    if [ -z "$login_name" ] || [ "${login_name#\#}" != "$login_name" ]; then
+        continue
     fi
+
+    if [ "$(dirname "$user_home")" = "/home" ]; then
+        printf '[Entry #%d]\n\tlogin=%s\n\tenc_pass=%s\n\tuid=%s\n\tgid=%s\n\tuser_name=%s\n\thome=%s\n\tshell=%s\n' \
+            "$entry_number" "$login_name" "$encrypted_pass" "$uid" "$gid" \
+            "$user_name" "$user_home" "$user_shell"
+    fi
+    entry_number=$((entry_number + 1))
 done < "$FILE"
