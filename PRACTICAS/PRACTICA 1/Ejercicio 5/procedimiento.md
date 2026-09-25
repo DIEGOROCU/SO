@@ -7,7 +7,8 @@
 
 2.  **Filtrado de Subdirectorios:**
     *   Dentro del bucle `while`, se emplea `dirname "$user_home"` para obtener la ruta "padre" de la variable `$user_home`.
-    *   Se usa un bloque condicional `if [ "$(dirname "$user_home")" = "/home" ]; then` para evaluar de manera estricta si el "home" del usuario "cuelga" directamente del directorio `/home`.
+    *   Se usa un bloque condicional `if [ "$(dirname "$user_home")" = "/home" ]; then` para evaluar de manera estricta si el `home` cuelga directamente del directorio `/home`.
+    *   Las entradas se imprimen con `printf` en el formato verbose de `show-passwd`, incluyendo `[Entry #n]` y los campos con tabulacion.
 
 3.  **Ejecución:**
     ```bash
@@ -16,3 +17,9 @@
     # O para probar con un fichero diferente:
     ./show-passwd.sh mi_fichero_passwd_falso
     ```
+
+4.  **Orden con `cut` y `grep`:**
+    ```bash
+    cut -d':' -f6 /etc/passwd | grep '^/home'
+    ```
+    `cut` extrae el sexto campo, que es el directorio personal, y `grep` conserva los que empiezan por `/home`.

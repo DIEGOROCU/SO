@@ -5,7 +5,7 @@ Para obtener del fichero `/etc/passwd` todos los homes que empiecen por `/home`,
 
 La orden completa es:
 ```bash
-cut -d':' -f6 /etc/passwd | grep "^/home"
+cut -d':' -f6 /etc/passwd | grep '^/home'
 ```
 
 **Explicación:**
