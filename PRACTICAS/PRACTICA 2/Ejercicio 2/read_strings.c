@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <err.h>
 
 char *loadstr(FILE *input)
 {
@@ -9,10 +7,18 @@ char *loadstr(FILE *input)
     size_t len = 0;
     long pos;
     char *str;
+    pos = ftell(input);
+    if (pos == -1L) {
+        return NULL;
+    }
 
-    pos = ftell(input);   // guarda posición actual
-
-    while (fread(&c, sizeof(c), 1, input) == 1 && c != '\0') {
+    while (1) {
+        if (fread(&c, sizeof(c), 1, input) != 1) {
+            return NULL;
+        }
+        if (c == '\0') {
+            break;
+        }
         len++;
     }
 
@@ -25,14 +31,12 @@ char *loadstr(FILE *input)
         return NULL;
     }
 
-    if (fread(str, 1, len, input) != len) {
+    if (fread(str, 1, len + 1, input) != len + 1) {
         free(str);
         return NULL;
     }
 
     str[len] = '\0';
-
-    fseek(input, 1, SEEK_CUR);   // saltar el '\0'
 
     return str;
 }
@@ -40,17 +44,23 @@ char *loadstr(FILE *input)
 int main(int argc, char *argv[])
 {
 	FILE* file=NULL;
-    unsigned char c;
-    size_t ret;
+    char *str;
 
 	if (argc < 2) {
         fprintf(stderr,"Usage: %s <file_name>\n",argv[0]);
         exit(1);
     }
 
-    if ((file = fopen(argv[1], "r")) == NULL) {
-        err(2,"The input file %s could not be opened",argv[1]);
+    if ((file = fopen(argv[1], "rb")) == NULL) {
+        perror("The input file could not be opened");
+        return 2;
     }
-        
     
+    while((str = loadstr(file)) != NULL) {
+        printf("%s\n", str);
+        free(str);
+    }
+
+    fclose(file);
+    return 0;
 }
