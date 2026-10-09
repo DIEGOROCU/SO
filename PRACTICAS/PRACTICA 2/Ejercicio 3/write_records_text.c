@@ -27,10 +27,12 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    // "w" -> write text. Escribe cadenas de caracteres legibles.
     if ((file = fopen(argv[1], "w")) == NULL) {
         err(2, "The output file %s could not be opened", argv[1]);
     }
 
+    // fprintf funciona igual que printf pero apunta a un flujo FILE específico en vez de a la consola (stdout)
     for (size_t i = 0; i < NUM_RECORDS; i++) {
         if (fprintf(file, "%d %.2f %s\n", records[i].id, records[i].value, records[i].label) < 0) {
             fclose(file);

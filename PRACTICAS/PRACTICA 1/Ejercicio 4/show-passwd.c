@@ -5,7 +5,7 @@
 
 #define MAX_LINE 1024
 
-// Estructura para almacenar una entrada de /etc/passwd
+// typedef simplifica usar "struct passwd_entry_t" a solo "passwd_entry_t"
 typedef struct {
     char *login_name;
     char *optional_encrypted_passwd;
@@ -16,74 +16,36 @@ typedef struct {
     char *user_shell;
 } passwd_entry_t;
 
-// Función original para clonar strings (reemplazada posteriormente por strdup)
-/*
-char* clone_string(const char* str) {
-    if (str == NULL) return NULL;
-    char* clone = malloc(strlen(str) + 1);
-    if (clone) strcpy(clone, str);
-    return clone;
-}
-*/
-
-// Parsea una línea de /etc/passwd y rellena la estructura
+// Parsea una línea separada por ':' (estándar /etc/passwd)
 passwd_entry_t parse_passwd(char *line) {
     passwd_entry_t entry;
     char *token;
     
-    // Login name
+    // strsep() busca el delimitador ":", divide el string y avanza el puntero de line. Devuelve la porción.
     token = strsep(&line, ":");
-    if (token != NULL) {
-        entry.login_name = strdup(token);
-    } else {
-        entry.login_name = NULL;
-    }
+    // strdup() reserva memoria (malloc subyacente) y copia el string (requiere free() posterior).
+    entry.login_name = (token != NULL) ? strdup(token) : NULL;
     
-    // Password
     token = strsep(&line, ":");
-    if (token != NULL) {
-        entry.optional_encrypted_passwd = strdup(token);
-    } else {
-        entry.optional_encrypted_passwd = NULL;
-    }
+    entry.optional_encrypted_passwd = (token != NULL) ? strdup(token) : NULL;
     
-    // UID
     token = strsep(&line, ":");
-    if (token != NULL) {
-        entry.uid = atoi(token);
-    } else {
-        entry.uid = 0;
-    }
+    entry.uid = (token != NULL) ? atoi(token) : 0; // atoi extrae int de string (ASCII to Integer)
     
-    // GID
     token = strsep(&line, ":");
-    if (token != NULL) {
-        entry.gid = atoi(token);
-    } else {
-        entry.gid = 0;
-    }
+    entry.gid = (token != NULL) ? atoi(token) : 0;
     
-    // User name
     token = strsep(&line, ":");
-    if (token != NULL) {
-        entry.user_name = strdup(token);
-    } else {
-        entry.user_name = NULL;
-    }
+    entry.user_name = (token != NULL) ? strdup(token) : NULL;
     
-    // Home
     token = strsep(&line, ":");
-    if (token != NULL) {
-        entry.user_home = strdup(token);
-    } else {
-        entry.user_home = NULL;
-    }
+    entry.user_home = (token != NULL) ? strdup(token) : NULL;
     
-    // Shell
     token = strsep(&line, ":");
     if (token != NULL) {
+        // Elimina el salto de línea al final pisándolo con el terminador '\0'
         if (token[strlen(token)-1] == '\n') {
-            token[strlen(token)-1] = '\0'; // Remove newline
+            token[strlen(token)-1] = '\0'; 
         }
         entry.user_shell = strdup(token);
     } else {
@@ -95,46 +57,16 @@ passwd_entry_t parse_passwd(char *line) {
 
 void print_passwd_entry(passwd_entry_t *entry, int csv) {
     if (csv == 1) {
-        if (entry->login_name != NULL) {
-            printf("%s,", entry->login_name);
-        } else {
-            printf(",");
-        }
-        
-        if (entry->optional_encrypted_passwd != NULL) {
-            printf("%s,", entry->optional_encrypted_passwd);
-        } else {
-            printf(",");
-        }
-        
-        printf("%d,%d,", entry->uid, entry->gid);
-        
-        if (entry->user_name != NULL) {
-            printf("%s,", entry->user_name);
-        } else {
-            printf(",");
-        }
-        
-        if (entry->user_home != NULL) {
-            printf("%s,", entry->user_home);
-        } else {
-            printf(",");
-        }
-        
-        if (entry->user_shell != NULL) {
-            printf("%s\n", entry->user_shell);
-        } else {
-            printf("\n");
-        }
+        printf("%s,%s,%d,%d,%s,%s,%s\n", 
+            entry->login_name ? entry->login_name : "",
+            entry->optional_encrypted_passwd ? entry->optional_encrypted_passwd : "",
+            entry->uid, entry->gid,
+            entry->user_name ? entry->user_name : "",
+            entry->user_home ? entry->user_home : "",
+            entry->user_shell ? entry->user_shell : "");
     } else {
-        printf("Login: %s\n", entry->login_name);
-        printf("Password: %s\n", entry->optional_encrypted_passwd);
-        printf("UID: %d\n", entry->uid);
-        printf("GID: %d\n", entry->gid);
-        printf("Name: %s\n", entry->user_name);
-        printf("Home: %s\n", entry->user_home);
-        printf("Shell: %s\n", entry->user_shell);
-        printf("----------------------\n");
+        printf("Login: %s\nPassword: %s\nUID: %d\nGID: %d\nName: %s\nHome: %s\nShell: %s\n----------------------\n",
+            entry->login_name, entry->optional_encrypted_passwd, entry->uid, entry->gid, entry->user_name, entry->user_home, entry->user_shell);
     }
 }
 
@@ -143,35 +75,32 @@ int main(int argc, char *argv[]) {
     char *input_file = "/etc/passwd";
     int csv_mode = 0;
 
-    // Procesar opciones -i (input file) y -c (csv)
+    // "i:c": -i requiere argumento (input file), -c es un flag sin argumento.
     while ((opt = getopt(argc, argv, "i:c")) != -1) {
         switch (opt) {
-            case 'i':
-                input_file = optarg;
-                break;
-            case 'c':
-                csv_mode = 1;
-                break;
+            case 'i': input_file = optarg; break;
+            case 'c': csv_mode = 1; break;
             default:
                 fprintf(stderr, "Usage: %s [-i input_file] [-c]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
 
+    // fopen en modo lectura ("r").
     FILE *file = fopen(input_file, "r");
     if (!file) {
-        perror("Error opening file");
+        perror("Error opening file"); // perror imprime string más razón del error del sistema
         return EXIT_FAILURE;
     }
 
     char line[MAX_LINE];
+    // fgets lee hasta el final de la línea o MAX_LINE y lo mete en line.
     while (fgets(line, sizeof(line), file)) {
-        // Hacemos una copia local de la línea porque strsep la modifica
-        char *line_ptr = line;
+        char *line_ptr = line; // Copia del puntero porque strsep() lo altera!
         passwd_entry_t entry = parse_passwd(line_ptr);
         print_passwd_entry(&entry, csv_mode);
         
-        // Liberar la memoria de strdup
+        // Es imperativo liberar los strdup para no tener fugas de memoria (memory leaks).
         free(entry.login_name);
         free(entry.optional_encrypted_passwd);
         free(entry.user_name);
@@ -179,6 +108,6 @@ int main(int argc, char *argv[]) {
         free(entry.user_shell);
     }
 
-    fclose(file);
+    fclose(file); // Cerrar archivo abierto con fopen.
     return EXIT_SUCCESS;
 }

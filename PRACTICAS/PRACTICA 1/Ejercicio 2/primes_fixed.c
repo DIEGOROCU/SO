@@ -1,52 +1,25 @@
-/**
-* This program calculates the sum of the first n prime
-* numbers. Optionally, it allows the user to provide as argument the
-* value of n, which is 10 by default.
-*/
-#include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
+#include <stdlib.h>
 
-/**
-* This function takes an array of integers and returns the sum of its n elements.
-*/
+// is_prime comprueba si x es primo.
+int is_prime(int x); 
+void compute_primes(int result[], int n);
 int sum(int arr[], int n);
 
-/**
-* This function fills an array with the first n prime numbers.
-*/
-void compute_primes(int result[], int n);
-
-/**
-* This function returns 1 if the integer provided is a prime, 0 otherwise.
-*/
-int is_prime(int x);
-
-int main(int argc, char **argv) {
-    int n = 10; // by default the first 10 primes
-    // FIX 1: Use == for comparison, not = (assignment)
-    if(argc == 2) {
-        // FIX 2: Store the result of atoi, and read from argv[1] (argv[0] is program name)
-        n = atoi(argv[1]);
-    }
-
-    int* primes = (int*)malloc(n*sizeof(int));
-    compute_primes(primes, n);
-
-    int s = sum(primes, n);
-    printf("The sum of the first %d primes is %d\n", n, s);
-
-    free(primes);
-    return 0;
+int main() {
+    int primes[10]; // Array de tamaño fijo reservado en la pila
+    // Se pasa 'primes' por referencia (decaimiento a puntero).
+    compute_primes(primes, 10);
+    int total = sum(primes, 10);
+    printf("The sum of the first 10 primes is: %d\n", total);
+    return 0; // Código 0 indica éxito en la ejecución
 }
 
 int sum(int arr[], int n) {
     int i;
-    // FIX 3: Initialize total to 0
-    int total = 0;
+    int total = 0; // Obligatorio inicializar a 0 para no arrastrar basura de memoria
     for(i=0; i<n; i++) {
-        // FIX 4: Use += instead of =+ (which is just assigning positive arr[i])
-        total += arr[i];
+        total += arr[i]; // Equivalente a total = total + arr[i]
     }
     return total;
 }
@@ -59,24 +32,23 @@ void compute_primes(int result[], int n) {
             result[i] = x;
             i++;
         }
-        // FIX 5: Increment x unconditionally, otherwise infinite loop when x is not prime
-        x++; 
+        x++; // Siempre se incrementa, de lo contrario causaría bucle infinito
     }
     return;
 }
 
 int is_prime(int x) {
-    // FIX 6: Handle 2 explicitly, as 2 % 2 == 0 would return 0 otherwise
-    if(x == 2) return 1;
+    if(x == 2) return 1; // Excepción explícita para el único primo par
     
+    // El operador % (módulo) obtiene el resto de la división
     if(x % 2 == 0) {
         return 0;
     }
+    // i+=2 va comprobando solo impares para ahorrar iteraciones
     for(int i=3; i<x; i+=2) {
         if(x % i == 0) {
             return 0;
         }
     }
-    // FIX 7: Return 1 if no divisors were found
     return 1;
 }
