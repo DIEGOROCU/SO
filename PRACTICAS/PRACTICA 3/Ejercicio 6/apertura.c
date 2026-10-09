@@ -111,6 +111,13 @@ int main(int argc, char *argv[]) {
         printf("Bytes leidos: %zd\nContenido: %s", bytes, buffer);
     }
 
+    // Cierra el descriptor del fichero cuando ya no se necesita.
+    if (close(fd) == -1) {
+        // perror muestra el motivo por el que close no ha podido cerrar el fichero.
+        perror("close");
+        return 1;
+    }
+
     // Termina correctamente el programa.
     return 0;
 }
