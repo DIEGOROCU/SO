@@ -31,7 +31,7 @@ int copy(int fdo, int fdd)
 
 int copy_regular(const char *orig, const char *dest)
 {
-	/* Abrir origen modo lectura. (System call open, más rápida/baja que fopen) */
+	/* Abrir origen modo lectura. (System call open, más rápida/baja que flujos FILE*) */
 	int fdo = open(orig, O_RDONLY);
 	if (fdo == -1) {
 		return -1;
